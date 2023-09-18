@@ -3,7 +3,7 @@
 setlocal enabledelayedexpansion
 
 :: Set SCRIPT_NAME to the name of this batch file script
-	set CURRENT_VERSION=2.0.b04
+	set CURRENT_VERSION=2.0.b05
 
 :: Set SCRIPT_NAME to the name of this batch file script
 	set SCRIPT_NAME=FE-Assistant
@@ -48,7 +48,12 @@ TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)
 	:: Use curl to fetch the JSON data
 	curl -s "%URL_TO_DOWNLOAD%">response.json
 
-	:: Parse JSON and extract "tag_name"
+	:: Notes for future developemnt:
+	:: 	Searches for lines containing the text "tag_name", and extract the values associated with "tag_name" into a variable named LATEST_VERSION.
+	:: 		Note-In this .json, there should only be one line with "tag_name" in it.
+	:: 	The command inside the single quotes ('...') reads the response.json file using the type command and pipes the output to find /i "tag_name"
+	:: 	which searches for lines containing the case-insensitive text "tag_name".
+	:: 	The rest of the !line! code is just striping the data way from the actual version number.
 	for /f "tokens=*" %%A in ('type response.json ^| find /i "tag_name"') do (
 		set "line=%%A"
 		set "line=!line:*"tag_name": =!"
@@ -59,7 +64,14 @@ TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)
 :DoYouHaveLatest
 	
 	:: If the current version matches the latest version available, contine on with normal code.
-	if "!CURRENT_VERSION!"=="!LATEST_VERSION!" goto RestOfCode
+	if "!CURRENT_VERSION!"=="!LATEST_VERSION!" (
+		
+		set VERSION_STATUS=---Running Latest Version---
+		goto RestOfCode
+	)
+	
+	set VERSION_STATUS=---VERSION v!LATEST_VERSION! AVAILABLE---
+	TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)       !VERSION_STATUS!
 
 :UpdateAvailablePrompt
 
@@ -204,7 +216,7 @@ mode con: cols=140 lines=45
 :: Users of this batch file should put their own faclity ID on the next line.
 SET FACILITY_ID=ZZZ
 
-TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)-%FACILITY_ID%
+TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)-!FACILITY_ID!       !VERSION_STATUS!
 
 :HELLO
 
@@ -224,17 +236,17 @@ TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)-%FACILITY_ID%
 	ECHO               simply delete this file and run the new one.
 	ECHO.
 	ECHO.
-	ECHO      B) %FACILITY_ID% AIRAC RELEASE PREP.
+	ECHO      B) !FACILITY_ID! AIRAC RELEASE PREP.
 	ECHO.
 	ECHO              -Type DETAILS if you want more information on what this function does.
 	ECHO                   -If you haven't ran this script before, be sure you read this information.
 	ECHO.
-	ECHO              -If "%FACILITY_ID%" is not your facility ID, please choose the "CHANGE FACILITY" option.
+	ECHO              -If "!FACILITY_ID!" is not your facility ID, please choose the "CHANGE FACILITY" option.
 	ECHO.
 	ECHO.
 	ECHO      C) CHANGE FACILITY.
 	ECHO.
-	ECHO              -If your facility is NOT "%FACILITY_ID%", select this option.
+	ECHO              -If your facility is NOT "!FACILITY_ID!", select this option.
 	ECHO.
 	ECHO.
 	ECHO      D) HELP.
@@ -347,8 +359,8 @@ GOTO HELLO
 	:: Creates a folder in the Local Appdata directory of the user if it doesn't already exist
 	:: in order to save previously selected directories so the user doesn't have to select the folders each time.
 	CD /D "%LocalAppData%"
-		IF NOT EXIST "%FACILITY_ID%-FE-ASSISTANT-appdata" MD "%FACILITY_ID%-FE-ASSISTANT-appdata"
-		SET FE_ASSISTANT_AppData_DIR=%LocalAppData%\%FACILITY_ID%-FE-ASSISTANT-appdata
+		IF NOT EXIST "!FACILITY_ID!-FE-ASSISTANT-appdata" MD "!FACILITY_ID!-FE-ASSISTANT-appdata"
+		SET FE_ASSISTANT_AppData_DIR=%LocalAppData%\!FACILITY_ID!-FE-ASSISTANT-appdata
 
 :DefaultSetterManagement
 
@@ -372,7 +384,7 @@ GOTO HELLO
 :PreferencesHandler
 
 	:: Define the configuration file name
-	set "configFile=%FACILITY_ID%-FE-ASSISTANT_config.txt"
+	set "configFile=!FACILITY_ID!-FE-ASSISTANT_config.txt"
 	
 	:: Initialize variables
 	SET "DecombinedALiasFilesDirectory=NOT_SET"
@@ -452,7 +464,7 @@ GOTO HELLO
 			ECHO.
 			ECHO.
 			ECHO What do you wish the name of the finalized Alias file to be called?"
-			ECHO     Ex: %FACILITY_ID% Alias
+			ECHO     Ex: !FACILITY_ID! Alias
 			ECHO.
 			ECHO.
 
@@ -645,7 +657,7 @@ START "" "https://data-admin.virtualnas.net/"
 START "" "https://data-admin.virtualnas.net/video-maps"
 START /B /WAIT explorer.exe "!FEB_CRC_BATCH_DIR!" "!CombinedALiasFilesDirectory!"
 
-pause>nul
+PAUSE>NUL
 
 EXIT
 
@@ -740,7 +752,7 @@ EXIT
 
 :DETAILS
 
-mode con: cols=140 lines=70
+	mode con: cols=140 lines=70
 
 	CLS
 	
@@ -811,6 +823,7 @@ mode con: cols=140 lines=70
 	ECHO.
 	ECHO.
 	ECHO Press any key to return to the main menu...
+	
 	PAUSE>NUL
 	
 	mode con: cols=140 lines=45
@@ -878,7 +891,7 @@ mode con: cols=140 lines=70
 	ECHO 	-Any other action will just return you to the main menu.
 	ECHO.
 	
-	:: If user types Y (regardless of case), the %FACILITY_ID%-FE-ASSISTANT-appdata
+	:: If user types Y (regardless of case), the !FACILITY_ID!-FE-ASSISTANT-appdata
 	:: folder from %LocalAppdata% and all contents will be removed which will
 	:: require the user to set it up again on the next run of the AIRAC Release option.
 	:: Typing anything else or nothing at all will return to the beginning of this scrip.
@@ -887,7 +900,7 @@ mode con: cols=140 lines=70
 	SET /P RESET_QUERY=To reset preferences type Y, and press Enter: 
 		if /i "!RESET_QUERY!"=="Y" (
 
-			RD /S /Q %FACILITY_ID%-FE-ASSISTANT-appdata
+			RD /S /Q !FACILITY_ID!-FE-ASSISTANT-appdata
 			
 			ECHO.
 			ECHO.
@@ -911,16 +924,16 @@ mode con: cols=140 lines=70
 	ECHO.
 	ECHO.
 	
-	if exist "%LocalAppData%\%FACILITY_ID%-FE-ASSISTANT-appdata\DefaultSetterPrefs" (
+	if exist "%LocalAppData%\!FACILITY_ID!-FE-ASSISTANT-appdata\DefaultSetterPrefs" (
 		ECHO Press any key to open the directory with your CRC GeoJSON preference files...
 		
 		PAUSE>NUL
 		
-		START /B /WAIT explorer.exe "%LocalAppData%\%FACILITY_ID%-FE-ASSISTANT-appdata\DefaultSetterPrefs"
+		START /B /WAIT explorer.exe "%LocalAppData%\!FACILITY_ID!-FE-ASSISTANT-appdata\DefaultSetterPrefs"
 		
 		EXIT
 	) ELSE (
-		ECHO Looks like you do not yet have Default Setter Pref settings yet for %FACILITY_ID%.
+		ECHO Looks like you do not yet have Default Setter Pref settings yet for !FACILITY_ID!.
 		ECHO.
 		ECHO Contact the developer if you still have issues after troubleshooting.
 		ECHO.
@@ -1209,8 +1222,6 @@ mode con: cols=140 lines=70
 	
 	exit
 
-
-
 :FILE_TO_RENAME_NOT_FOUND
 	
 	:: Then it will write the three prefs files for the DefaultSetter pythong with generic data allowing the user to edit it at the end.
@@ -1434,24 +1445,4 @@ mode con: cols=140 lines=70
 	PAUSE>NUL
 	
 	EXIT
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
