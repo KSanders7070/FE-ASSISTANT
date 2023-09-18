@@ -10,3 +10,5 @@ The rest of the files are handled by this program.
 Afterwards, just launch the .bat file and follow the prompts... READ EVERYTHING CAREFULLY before typing anything!
 
 Reach out to Kyle Sanders with any questions.
+
+SPECIAL THANKS! To Kyle Rodgers for helping build the Python Code within this BATCH file! https://github.com/misterrodg
