@@ -3,7 +3,7 @@
 setlocal enabledelayedexpansion
 
 :: Set SCRIPT_NAME to the name of this batch file script
-	set CURRENT_VERSION=2.0.b03
+	set CURRENT_VERSION=2.0.b04
 
 :: Set SCRIPT_NAME to the name of this batch file script
 	set SCRIPT_NAME=FE-Assistant
@@ -204,7 +204,7 @@ mode con: cols=140 lines=45
 :: Users of this batch file should put their own faclity ID on the next line.
 SET FACILITY_ID=ZZZ
 
-TITLE FE-ASSISTANT (v%USER_VER%)-%FACILITY_ID%
+TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)-%FACILITY_ID%
 
 :HELLO
 
