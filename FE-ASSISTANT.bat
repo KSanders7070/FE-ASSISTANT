@@ -3,7 +3,7 @@
 setlocal enabledelayedexpansion
 
 :: Set SCRIPT_NAME to the name of this batch file script
-	set CURRENT_VERSION=2.0.b05
+	set CURRENT_VERSION=2.0.b06
 
 :: Set SCRIPT_NAME to the name of this batch file script
 	set SCRIPT_NAME=FE-Assistant
@@ -29,7 +29,7 @@ setlocal enabledelayedexpansion
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)
+TITLE !SCRIPT_NAME! (v!THIS_VERSION!)
 
 :SetUpTempDir
 
@@ -64,14 +64,15 @@ TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)
 :DoYouHaveLatest
 	
 	:: If the current version matches the latest version available, contine on with normal code.
-	if "!CURRENT_VERSION!"=="!LATEST_VERSION!" (
+	if "!THIS_VERSION!"=="!LATEST_VERSION!" (
 		
 		set VERSION_STATUS=---Running Latest Version---
-		goto RestOfCode
+			TITLE !SCRIPT_NAME! (v!THIS_VERSION!)       !VERSION_STATUS!
+		goto UpdateCleanUp
 	)
 	
 	set VERSION_STATUS=---VERSION v!LATEST_VERSION! AVAILABLE---
-	TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)       !VERSION_STATUS!
+		TITLE !SCRIPT_NAME! (v!THIS_VERSION!)       !VERSION_STATUS!
 
 :UpdateAvailablePrompt
 
@@ -84,8 +85,8 @@ TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)
 	ECHO * * * * * * * * * * * * *
 	ECHO.
 	ECHO.
+	ECHO YOUR VERSION:   !THIS_VERSION!
 	ECHO GITHUB VERSION: !LATEST_VERSION!
-	ECHO YOUR VERSION:   !CURRENT_VERSION!
 	ECHO.
 	ECHO.
 	ECHO.
@@ -110,7 +111,7 @@ TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)
 	SET /p UPDATE_CHOICE=Please type either A, M, or C and press Enter: 
 		if /I %UPDATE_CHOICE%==A GOTO AUTO_UPDATE
 		if /I %UPDATE_CHOICE%==M GOTO MANUAL_UPDATE
-		if /I %UPDATE_CHOICE%==C GOTO RestOfCode
+		if /I %UPDATE_CHOICE%==C GOTO UpdateCleanUp
 		if /I %UPDATE_CHOICE%==NO_CHOICE_MADE GOTO UpdateAvailablePrompt
 			echo.
 			echo.
@@ -145,7 +146,7 @@ TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)
 	ECHO.
 	ECHO   THIS SCREEN WILL CLOSE.
 	ECHO.
-	ECHO   WAIT 5 SECONDS
+	ECHO   WAIT 5 SECONDS.
 	ECHO.
 	ECHO   THE NEW UPDATED BATCH FILE WILL START BY ITSELF.
 	ECHO.
@@ -164,13 +165,17 @@ TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)
 	CD /d "%temp%"
 		(
 		ECHO @ECHO OFF
+		ECHO.
+		ECHO Getting newest update; Please standby.
+		ECHO.
+		ECHO.
 		ECHO TIMEOUT 5
 		ECHO CD /d "%~dp0"
 		ECHO START %~nx0
 		ECHO EXIT
 		)>TempBatWillDelete.bat
 	
-	START /MIN TempBatWillDelete.bat
+	START "Update Waiting Message" TempBatWillDelete.bat
 	
 	CD /d "!CUR_BAT_DIR!"
 		curl -o %DOWNLOAD_FILE_NAME% -L %FILE_URL%
@@ -203,12 +208,12 @@ TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)
 	CD /D "%temp%"
 		IF exist "!GH_REPO_NAME!-UDPATE" RD /S /Q "!GH_REPO_NAME!-UDPATE"
 
-:RestOfCode
-	
 	:: Ensures the directory is back to where this batch file is hosted.
 	CD /D "%~dp0"
-	
-	CLS
+
+endlocal 
+
+:RestOfCode
 
 :START
 mode con: cols=140 lines=45
