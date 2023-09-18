@@ -3,7 +3,7 @@
 setlocal enabledelayedexpansion
 
 :: Set SCRIPT_NAME to the name of this batch file script
-	set CURRENT_VERSION=2.0.b02
+	set CURRENT_VERSION=2.0.b03
 
 :: Set SCRIPT_NAME to the name of this batch file script
 	set SCRIPT_NAME=FE-Assistant
@@ -542,12 +542,23 @@ CLS
 			
 	SET FEB_CRC_BATCH_DIR=!FEB_CRC_DIR!\vNAS BATCH UPLOAD
 	
-	:: Creates the vNAS BATCH UPLOAD folder inside the user selected FE-Buddy Output folder \CRC\.
-	CD /D "!FEB_CRC_DIR!"
+		:: If the vNAS BATCH UPLOAD folder already exists, it is likely that this script has already
+		:: been ran on that selected folder and will cause issues.
 		IF EXIST "!FEB_CRC_BATCH_DIR!" (
-			SET DIRECTORY_THAT_ALREADY_EXISTS=CRC\vNAS BATCH UPLOAD
+			SET DIRECTORY_THAT_ALREADY_EXISTS=FE-Buddy Output \CRC\vNAS BATCH UPLOAD
 			CALL :DirectoryAlreadyExists
 		)
+
+	:: Creates the vNAS BATCH UPLOAD folder inside the user selected FE-Buddy Output folder \CRC\.
+	CD /D "!FEB_CRC_DIR!"
+				
+		:: Checks to see if there are 21 or more .geojson files in the FE-Buddy \ CRC directory.
+		:: If there are less, then it is likely that the script has already been ran on this directory and will cause issues.
+		set "fileCount=0"
+		for %%i in (*.geojson) do (
+			set /a "fileCount+=1"
+		)
+		if not !fileCount! GEQ 21 CALL :IncorrectGeoJsonAmnt
 		
 		MD "!FEB_CRC_BATCH_DIR!"
 
@@ -582,6 +593,25 @@ CLS
 	for %%A in ("%DefaultSetter_Output_DIR%\*.geojson") do (
 		move "%%A" "%FEB_CRC_BATCH_DIR%"
 	)
+
+:EndChecks
+	set TextCheckStatus=NOT_SET
+	set GeoJsonsCheckStatus=NOT_SET
+	
+	:: Check if the .txt file exists in CombinedAliasFilesDirectory
+	:: If no .txt files found, set the TextCheckStatus variable to Failed.
+	if not exist "%CombinedAliasFilesDirectory%\*.txt" set TextCheckStatus=Failed
+	
+	:: Count the number of .geojson files in FEB_CRC_BATCH_DIR
+	for /f %%A in ('dir /b /a-d "%FEB_CRC_BATCH_DIR%\*.geojson" ^| find /c /v ""') do set "geojson_count=%%A"
+	
+		:: Check if there are at least 21 .geojson files
+		:: If less than 21, sets the GeoJsonsCheckStatus variable to failed.
+		if %geojson_count% LSS 21 set GeoJsonsCheckStatus=Failed
+	
+	:: If either check or both failed, goes to EndChecksFailed function to notify the user.
+	If "!TextCheckStatus!"=="Failed" CALL :EndChecksFailed
+	If "!GeoJsonsCheckStatus!"=="Failed" CALL :EndChecksFailed
 
 ECHO.
 ECHO.
@@ -699,7 +729,7 @@ EXIT
 	ECHO Setting variable: !VARIABLE_NAME!
 	ECHO Could not find directory: !DIRECTORY_NOT_FOUND!
 	ECHO.
-	ECHO If you were running an AIRAC release, it is suggested to rerun FE-Buddy
+	ECHO If you were running an AIRAC release, it may be a good idea to rerun FE-Buddy
 	ECHO prior to starting this batch file again.
 	ECHO.
 	ECHO Press any key to end this script...
@@ -901,36 +931,6 @@ mode con: cols=140 lines=70
 		
 		GOTO HELLO
 	)
-
-:TextFileAmountIncorrect
-
-	CLS
-	
-	ECHO.
-	ECHO.
-	ECHO               -------
-	ECHO                ERROR
-	ECHO               -------
-	ECHO.
-	ECHO In this directory: !PY_FEB_SRC_DIR!.
-	ECHO.
-	ECHO ...there should be a single .txt file and that file must contain the name of the
-	ECHO vNAS BATCH UPLOAD files with the defaults string to be inserted into that
-	ECHO file under the file name.
-	ECHO.
-	ECHO EXAMPLE:
-	ECHO      ERAM_FILTER 01_ALL ARTCC BOUNDARIES-HIGH.geojson
-	ECHO     ^{"type":"Feature","geometry":^{"type":"Point","coordinates":^[90.0,180.0^]^},"properties":^{"isLineDefaults":true,"bcg":40,"filters":^[40^],"style":"Solid","thickness":1^}^},
-	ECHO.
-	ECHO.
-	ECHO Please correct this and rerun this script with a fresh FE-Buddy output folder.
-	ECHO (rerun FE-Buddy prior to running this script again)
-	ECHO.
-	ECHO Press any key to exit...
-	
-	PAUSE>NUL
-	
-	exit
 
 :PythonNotInstalled
 	
@@ -1370,9 +1370,70 @@ mode con: cols=140 lines=70
 	
 	EXIT
 
+:IncorrectGeoJsonAmnt
 
+	CLS
+				
+	ECHO.
+	ECHO.
+	ECHO                            ---------
+	ECHO                             WARNING
+	ECHO                            ---------
+	ECHO.
+	ECHO !FEB_CRC_DIR!
+	ECHO.
+	ECHO 	There appears to be less than the expected amount of .geojson files
+	ECHO    in this directory.
+	ECHO	This may be because this batch script has been ran on this FE-Buddy Output
+	ECHO	folder already and would cause issues if continued with this process.
+	ECHO.
+	ECHO	Another possibility is that the FE-Buddy Output\CRC folder has another sub-folder
+	ECHO    that hosts all of the .geojsons which is unusual/unexpected such as:
+	ECHO 	FE-BUDDY OUTPUT\CRC\CRC
+	ECHO.
+	ECHO Please close this CMD prompt, run FE-Buddy again and get a new set of
+	ECHO data before running this script again.
+	ECHO.
+	ECHO Press any key to close this CMD Prompt...
+	
+	PAUSE>NUL
+	
+	EXIT
 
+:EndChecksFailed
 
+	CLS
+				
+	ECHO.
+	ECHO.
+	ECHO                            ---------
+	ECHO                             WARNING
+	ECHO                            ---------
+	ECHO.
+	ECHO 	Something went wrong...
+	ECHO.
+	
+	If "!TextCheckStatus!"=="Failed" (
+	ECHO	There appears to be no .txt file here where your alias file should be:
+	ECHO	!CombinedAliasFilesDirectory!
+	ECHO.
+	)
+	
+	If "!GeoJsonsCheckStatus!"=="Failed" (
+	ECHO	There appears to be less than the expected amount of .geojson files here:
+	ECHO	!FEB_CRC_BATCH_DIR!
+	ECHO.
+	)
+	ECHO Please close this CMD prompt, run FE-Buddy again and get a new set of
+	ECHO data before running this script again.
+	ECHO.
+	ECHO If the problem continues, reach out to Kyle Sanders (developer).
+	ECHO.
+	ECHO Press any key to close this CMD Prompt...
+	
+	PAUSE>NUL
+	
+	EXIT
 
 
 
