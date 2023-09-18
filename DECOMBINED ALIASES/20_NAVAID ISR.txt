@@ -1,0 +1,4 @@
+;This file will be managed by the FE-Buddy output every AIRAC. Here are some example lines...
+.NAVADK .MSG ZLC_ISR *** ADK 530 MOUNT MOFFETT NDB/DME
+.NAVMOUNTMOFFETT .MSG ZLC_ISR *** ADK 530 MOUNT MOFFETT NDB/DME
+.NAVAMF .MSG ZLC_ISR *** AMF 403 AMBLER NDB

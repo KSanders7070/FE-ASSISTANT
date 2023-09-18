@@ -1,0 +1,4 @@
+;This file will be managed by the FE-Buddy output every AIRAC. Here are some example lines...
+.ADKTMC .OPENURL https://aeronav.faa.gov/d-tpp/2310/AKTO.PDF#nameddest=(ADK)  ; ADAK-TAKEOFF MINIMUMS
+.ADKIY3C .OPENURL https://aeronav.faa.gov/d-tpp/2310/01244IYLY23.PDF  ; ADAK-ILS Y OR LOC Y RWY 23
+.ADKLY3C .OPENURL https://aeronav.faa.gov/d-tpp/2310/01244IYLY23.PDF  ; ADAK-ILS Y OR LOC Y RWY 23

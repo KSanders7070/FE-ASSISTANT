@@ -1,0 +1,4 @@
+;This file will be managed by the FE-Buddy output every AIRAC. Here are some example lines...
+.A16F .FF AP WC
+.B9F .FF DEEDS MTH
+.G13F .FF ZOLMN MQI

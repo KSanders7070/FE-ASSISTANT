@@ -1,0 +1,4 @@
+;This file will be managed by the FE-Buddy output every AIRAC. Here are some example lines...
+.APTADK .MSG ZLC_ISR *** FAA-ADK : ICAO-PADK ___ ADAK AIRPORT ___ 20'MSL ___ Not Towered ___ ZAP ___ AWOS-134.5
+.APTPADK .MSG ZLC_ISR *** FAA-ADK : ICAO-PADK ___ ADAK AIRPORT ___ 20'MSL ___ Not Towered ___ ZAP ___ AWOS-134.5
+.APTAKK .MSG ZLC_ISR *** FAA-AKK : ICAO-PAKH ___ AKHIOK AIRPORT ___ 44'MSL ___ Not Towered ___ ZAN ___ AWOS-118.325

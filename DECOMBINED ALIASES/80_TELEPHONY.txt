@@ -1,0 +1,4 @@
+;This file will be managed by the FE-Buddy output every AIRAC. Here are some example lines...
+.idFSS .MSG FAA_ISR *** 3LD: FSS ___ TELEPHONY: ABACO
+.idABJ .MSG FAA_ISR *** 3LD: ABJ ___ TELEPHONY: ABAETE
+.idNKP .MSG FAA_ISR *** 3LD: NKP ___ TELEPHONY: ABAKAN AIR

@@ -1,0 +1,3 @@
+;Consideration: https://github.com/KSanders7070/AIRPORT_ALIAS_CREATION
+; -However, FE-Buddy does intend to automate this process sometime in the future.
+
