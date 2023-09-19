@@ -3,7 +3,7 @@
 setlocal enabledelayedexpansion
 
 :: Set SCRIPT_NAME to the name of this batch file script
-	set CURRENT_VERSION=2.0.b06
+	set THIS_VERSION=2.0.b07
 
 :: Set SCRIPT_NAME to the name of this batch file script
 	set SCRIPT_NAME=FE-Assistant
@@ -43,36 +43,86 @@ TITLE !SCRIPT_NAME! (v!THIS_VERSION!)
 :GetLatestVerNum
 
 	:: URL to fetch JSON data from GitHub API
-	set "URL_TO_DOWNLOAD=https://api.github.com/repos/!GH_USER_NAME!/!GH_REPO_NAME!/releases/latest"
+	set "GH_LATEST_RLS_PAGE=https://api.github.com/repos/!GH_USER_NAME!/!GH_REPO_NAME!/releases/latest"
+	::                      https://api.github.com/repos/KSanders7070/AUTO_UPDATE_BATCH_FILE/releases/latest
+		set "URL_TO_DOWNLOAD=!GH_LATEST_RLS_PAGE!"
+	set "LATEST_VERSION="
 	
-	:: Use curl to fetch the JSON data
-	curl -s "%URL_TO_DOWNLOAD%">response.json
+	:RedirectLooop
 
-	:: Notes for future developemnt:
-	:: 	Searches for lines containing the text "tag_name", and extract the values associated with "tag_name" into a variable named LATEST_VERSION.
-	:: 		Note-In this .json, there should only be one line with "tag_name" in it.
-	:: 	The command inside the single quotes ('...') reads the response.json file using the type command and pipes the output to find /i "tag_name"
-	:: 	which searches for lines containing the case-insensitive text "tag_name".
-	:: 	The rest of the !line! code is just striping the data way from the actual version number.
-	for /f "tokens=*" %%A in ('type response.json ^| find /i "tag_name"') do (
-		set "line=%%A"
-		set "line=!line:*"tag_name": =!"
-		set "line=!line:~2,-2!"
-		set "LATEST_VERSION=!line!"
-	)
+		if exist response.json del /Q response.json
+		
+		:: Use CURL to download the JSON data
+		curl -s -o response.json !URL_TO_DOWNLOAD!
+		
+			if not exist "response.json" (
+			
+			ECHO.
+			ECHO.
+			ECHO -------
+			ECHO  ERROR
+			ECHO -------
+			ECHO.
+			ECHO Something went wrong with downloading the latest release information.
+			ECHO.
+			ECHO.
+			ECHO Press any key to continue with this version of the batch file or
+			ECHO just close this window...
+			ECHO NOTE-I will open the releases page for you to see if there is a newer version.
+			
+			PAUSE>NUL
+			START "" "!GH_LATEST_RLS_PAGE!"
+			GOTO UpdateCleanUp
+			)
+		
+		::Check if "exceeded" is present in the JSON, if so it likely means the API Call limit has been reached.
+		findstr /C:"exceeded" response.json
+			if "%errorlevel%"=="0" (
+				ECHO.
+				ECHO.
+				ECHO -------
+				ECHO  ERROR
+				ECHO -------
+				ECHO.
+				ECHO While trying to get the latest version number for this batch file from GitHub,
+				ECHO I found that the number of requests has been exceeded.
+				ECHO You can try again in a while.
+				ECHO.
+				ECHO.
+				ECHO Press any key to continue with this version of the batch file or
+				ECHO just close this window...
+				ECHO NOTE-I will open the releases page for you to see if there is a newer version.
+				
+				PAUSE>NUL
+				START "" "!GH_LATEST_RLS_PAGE!"
+				GOTO UpdateCleanUp
+			)
+				
+		:: Check if "tag_name" is present in the JSON.
+		findstr /C:"tag_name" response.json
+			if "%errorlevel%"=="0" (
+				:: tag_name Found in file which means there was no redirect or this is the final redirect
+				:: page and has the version number on it.
+				:: Extract the text between the second set of quotes and remove the first character (usually a lower case v).
+				for /f "tokens=2 delims=:" %%a in ('findstr /C:"tag_name" response.json') do (
+					set "LATEST_VERSION=%%~a"
+					set "LATEST_VERSION=!LATEST_VERSION:~3,-2!"
+				)
+			) else (
+				:: tag_name was not found which means that this is likely a redirect page.
+				:: Extract the line that has "https://api." and grab the URL between the second set of quotes.
+				:: Feed this URL back through the loop to see if this one redirects too. If it does, keep following until tag_name is found.
+				for /f "tokens=1,* delims=" %%a in ('findstr /C:"https://api." response.json') do (
+					set "URL_TO_DOWNLOAD=%%~a"
+					set "URL_TO_DOWNLOAD=!URL_TO_DOWNLOAD:~10,-2!"
+				)
+				goto RedirectLooop
+			)
 
 :DoYouHaveLatest
 	
 	:: If the current version matches the latest version available, contine on with normal code.
-	if "!THIS_VERSION!"=="!LATEST_VERSION!" (
-		
-		set VERSION_STATUS=---Running Latest Version---
-			TITLE !SCRIPT_NAME! (v!THIS_VERSION!)       !VERSION_STATUS!
-		goto UpdateCleanUp
-	)
-	
-	set VERSION_STATUS=---VERSION v!LATEST_VERSION! AVAILABLE---
-		TITLE !SCRIPT_NAME! (v!THIS_VERSION!)       !VERSION_STATUS!
+	if /i "!THIS_VERSION!"=="!LATEST_VERSION!" goto UpdateCleanUp
 
 :UpdateAvailablePrompt
 
@@ -85,103 +135,28 @@ TITLE !SCRIPT_NAME! (v!THIS_VERSION!)
 	ECHO * * * * * * * * * * * * *
 	ECHO.
 	ECHO.
-	ECHO YOUR VERSION:   !THIS_VERSION!
 	ECHO GITHUB VERSION: !LATEST_VERSION!
+	ECHO YOUR VERSION:   !THIS_VERSION!
 	ECHO.
 	ECHO.
 	ECHO.
 	ECHO  CHOICES:
 	ECHO.
-	ECHO     A   -   AUTOMATICALLY UPDATE THE BATCH FILE YOU ARE USING NOW.
-	ECHO.
-	ECHO     M   -   MANUALLY DOWNLOAD THE NEWEST BATCH FILE UPDATE AND USE THAT FILE.
+	ECHO     U   -   MANUALLY DOWNLOAD THE NEWEST BATCH FILE UPDATE AND USE THAT FILE.
 	ECHO.
 	ECHO     C   -   CONTINUE USING THIS FILE.
-	ECHO.
-	ECHO.
-	ECHO.
-	ECHO NOTE: IF YOU HAVE ATTMEPTED TO AUTOATMICALLY UPDATE ALREADY AND YOU CONTINUE
-	ECHO       TO GET THIS UPDATE SCREEN, PLEASE UTILIZE THE MANUAL UPDATE OPTION.
 	ECHO.
 	ECHO.
 	ECHO.
 
 	SET UPDATE_CHOICE=NO_CHOICE_MADE
 
-	SET /p UPDATE_CHOICE=Please type either A, M, or C and press Enter: 
-		if /I %UPDATE_CHOICE%==A GOTO AUTO_UPDATE
-		if /I %UPDATE_CHOICE%==M GOTO MANUAL_UPDATE
+	SET /p UPDATE_CHOICE=Please type either M, or C and press Enter: 
+		if /I %UPDATE_CHOICE%==U GOTO UPDATE
 		if /I %UPDATE_CHOICE%==C GOTO UpdateCleanUp
 		if /I %UPDATE_CHOICE%==NO_CHOICE_MADE GOTO UpdateAvailablePrompt
-			echo.
-			echo.
-			echo.
-			echo.
-			echo  %UPDATE_CHOICE% IS NOT A RECOGNIZED RESPONSE. Try again.
-			echo.
-			GOTO UpdateAvailablePrompt
 	
-:AUTO_UPDATE
-	
-	:: Sets the directory that this batch file is currently in.
-	SET CUR_BAT_DIR=%~dp0
-	
-	:: Sets the name of this batch file to this variable.
-	SET BAT_NAME=%~nx0
-	
-	:: Creates the URL to download the latest version of this batch file.
-	set FILE_URL=https://github.com/!GH_USER_NAME!/!GH_REPO_NAME!/releases/download/v!LATEST_VERSION!/!BAT_NAME!
-	
-	:: Sets the download file name to the same name as this batch file.
-	set DOWNLOAD_FILE_NAME=!BAT_NAME!
-
-	CLS
-	
-	ECHO.
-	ECHO.
-	ECHO * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	ECHO.
-	ECHO   PRESS ANY KEY TO START THE AUTOMATIC UPDATE.
-	ECHO.
-	ECHO.
-	ECHO   THIS SCREEN WILL CLOSE.
-	ECHO.
-	ECHO   WAIT 5 SECONDS.
-	ECHO.
-	ECHO   THE NEW UPDATED BATCH FILE WILL START BY ITSELF.
-	ECHO.
-	ECHO * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	ECHO.
-	ECHO.
-	
-	PAUSE
-	
-	:: Creates a small batch file that will be automatically launched and will:
-	::     1) Wait 5 seconds
-	::     2) Call the directory of this batch file
-	::     3) Will start a batch file by this same name however by the time
-	::        that is called, it is likely that this batch file will be
-	::        overwritten by the newly downloaded version.
-	CD /d "%temp%"
-		(
-		ECHO @ECHO OFF
-		ECHO.
-		ECHO Getting newest update; Please standby.
-		ECHO.
-		ECHO.
-		ECHO TIMEOUT 5
-		ECHO CD /d "%~dp0"
-		ECHO START %~nx0
-		ECHO EXIT
-		)>TempBatWillDelete.bat
-	
-	START "Update Waiting Message" TempBatWillDelete.bat
-	
-	CD /d "!CUR_BAT_DIR!"
-		curl -o %DOWNLOAD_FILE_NAME% -L %FILE_URL%
-	EXIT
-
-:MANUAL_UPDATE
+:UPDATE
 	
 	set GH_LATEST_RLS_PAGE=https://github.com/!GH_USER_NAME!/!GH_REPO_NAME!/releases/latest
 	
@@ -207,11 +182,9 @@ TITLE !SCRIPT_NAME! (v!THIS_VERSION!)
 	
 	CD /D "%temp%"
 		IF exist "!GH_REPO_NAME!-UDPATE" RD /S /Q "!GH_REPO_NAME!-UDPATE"
-
+	
 	:: Ensures the directory is back to where this batch file is hosted.
 	CD /D "%~dp0"
-
-endlocal 
 
 :RestOfCode
 
@@ -221,7 +194,7 @@ mode con: cols=140 lines=45
 :: Users of this batch file should put their own faclity ID on the next line.
 SET FACILITY_ID=ZZZ
 
-TITLE !SCRIPT_NAME! (v!CURRENT_VERSION!)-!FACILITY_ID!       !VERSION_STATUS!
+TITLE !SCRIPT_NAME! (v!THIS_VERSION!)-!FACILITY_ID!       !VERSION_STATUS!
 
 :HELLO
 
