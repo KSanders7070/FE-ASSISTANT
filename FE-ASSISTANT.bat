@@ -3,7 +3,7 @@
 setlocal enabledelayedexpansion
 
 :: Set SCRIPT_NAME to the name of this batch file script
-	set THIS_VERSION=2.0.b07
+	set THIS_VERSION=2.0
 
 :: Set SCRIPT_NAME to the name of this batch file script
 	set SCRIPT_NAME=FE-Assistant
@@ -42,12 +42,14 @@ TITLE !SCRIPT_NAME! (v!THIS_VERSION!)
 
 :GetLatestVerNum
 
-	:: URL to fetch JSON data from GitHub API
-	set "GH_LATEST_RLS_PAGE=https://api.github.com/repos/!GH_USER_NAME!/!GH_REPO_NAME!/releases/latest"
-	::                      https://api.github.com/repos/KSanders7070/AUTO_UPDATE_BATCH_FILE/releases/latest
-		set "URL_TO_DOWNLOAD=!GH_LATEST_RLS_PAGE!"
-	set "LATEST_VERSION="
+	:: Set Variable for the user-end of the GitHub Latest Release page.
+	set "GH_LATEST_RLS_PAGE=https://github.com/!GH_USER_NAME!/!GH_REPO_NAME!/releases/latest"
 	
+	:: URL to fetch JSON data from GitHub API
+	set "URL_TO_DOWNLOAD=https://api.github.com/repos/!GH_USER_NAME!/!GH_REPO_NAME!/releases/latest"
+		
+	set "LATEST_VERSION="
+
 	:RedirectLooop
 
 		if exist response.json del /Q response.json
@@ -157,9 +159,7 @@ TITLE !SCRIPT_NAME! (v!THIS_VERSION!)
 		if /I %UPDATE_CHOICE%==NO_CHOICE_MADE GOTO UpdateAvailablePrompt
 	
 :UPDATE
-	
-	set GH_LATEST_RLS_PAGE=https://github.com/!GH_USER_NAME!/!GH_REPO_NAME!/releases/latest
-	
+
 	CLS
 	
 	START "" "!GH_LATEST_RLS_PAGE!"
@@ -207,7 +207,7 @@ TITLE !SCRIPT_NAME! (v!THIS_VERSION!)-!FACILITY_ID!       !VERSION_STATUS!
 	ECHO.
 	ECHO      A) CHECK FOR AN UPDATE.
 	ECHO.
-	ECHO              -You are currently running v%USER_VER%.
+	ECHO              -You are currently running v!THIS_VERSION!.
 	ECHO.
 	ECHO              -This option will open the GitHub releases page for this program allowing you to
 	ECHO               download the latest version. If you download another version of this BATCH files,
@@ -595,9 +595,9 @@ CLS
 	:: Count the number of .geojson files in FEB_CRC_BATCH_DIR
 	for /f %%A in ('dir /b /a-d "%FEB_CRC_BATCH_DIR%\*.geojson" ^| find /c /v ""') do set "geojson_count=%%A"
 	
-		:: Check if there are at least 21 .geojson files
-		:: If less than 21, sets the GeoJsonsCheckStatus variable to failed.
-		if %geojson_count% LSS 21 set GeoJsonsCheckStatus=Failed
+		:: Check if there is at least 1 .geojson files
+		:: If less than 1, sets the GeoJsonsCheckStatus variable to failed.
+		if %geojson_count% LSS 1 set GeoJsonsCheckStatus=Failed
 	
 	:: If either check or both failed, goes to EndChecksFailed function to notify the user.
 	If "!TextCheckStatus!"=="Failed" CALL :EndChecksFailed
@@ -633,9 +633,8 @@ PAUSE>NUL
 
 START "" "https://data-admin.virtualnas.net/"
 START "" "https://data-admin.virtualnas.net/video-maps"
-START /B /WAIT explorer.exe "!FEB_CRC_BATCH_DIR!" "!CombinedALiasFilesDirectory!"
-
-PAUSE>NUL
+START /B /WAIT explorer.exe "!FEB_CRC_BATCH_DIR!"
+START /B /WAIT explorer.exe "!CombinedALiasFilesDirectory!"
 
 EXIT
 
