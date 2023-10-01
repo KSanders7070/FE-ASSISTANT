@@ -3,7 +3,7 @@
 setlocal enabledelayedexpansion
 
 :: Set SCRIPT_NAME to the name of this batch file script
-	set THIS_VERSION=2.0
+	set THIS_VERSION=2.0.01
 
 :: Set SCRIPT_NAME to the name of this batch file script
 	set SCRIPT_NAME=FE-Assistant
@@ -192,7 +192,7 @@ TITLE !SCRIPT_NAME! (v!THIS_VERSION!)
 mode con: cols=140 lines=45
 
 :: Users of this batch file should put their own faclity ID on the next line.
-SET FACILITY_ID=ZZZ
+SET FACILITY_ID=ZLC
 
 TITLE !SCRIPT_NAME! (v!THIS_VERSION!)-!FACILITY_ID!       !VERSION_STATUS!
 
@@ -850,9 +850,15 @@ EXIT
 	
 	SET RESET_QUERY=NO_INPUT_BY_USER
 	
-	SET /P HELP_QUERY=To reset preferences type Y, and press Enter: 
+	SET /P HELP_QUERY=Type associated letter option or type DETAILS, and press Enter: 
 		if /i "!HELP_QUERY!"=="A" GOTO HelpResetPrefs
 		if /i "!HELP_QUERY!"=="B" GOTO HelpEditGeoJSONprefs
+		ECHO.
+		ECHO  *** !HELP_QUERY! *** is NOT a recognized response. Try again...
+		echo.
+		ECHO Press any key to try again...
+		PAUSE>NUL
+		goto HELP
 
 :HelpResetPrefs
 
