@@ -1,4 +1,7 @@
 # FE-ASSISTANT
+
+## [DOWNLOAD](https://github.com/KSanders7070/FE-ASSISTANT/releases/latest/download/FE-ASSISTANT.bat)
+
 v2.0+ of the previous ZLC-FE-ASSISTANT. Assists the facility engineer prepare files output by FE-Buddy for upload to the vNAS admin site.
 
 Open all the files in the DECOMBINED ALIASES folder and read the comments to get a general idea of what each is for.
