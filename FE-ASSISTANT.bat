@@ -3,7 +3,7 @@
 setlocal enabledelayedexpansion
 
 :: Set SCRIPT_NAME to the name of this batch file script
-	set THIS_VERSION=2.0.01
+	set THIS_VERSION=2.0.02
 
 :: Set SCRIPT_NAME to the name of this batch file script
 	set SCRIPT_NAME=FE-Assistant
@@ -743,14 +743,14 @@ EXIT
 	ECHO 	 alphanumeric order.
 	ECHO.
 	ECHO 		Example decombined alias files in the decombined directory:
-	ECHO 			*_EVERYTHING ELSE.txt
-	ECHO 			*_FAA CHART RECALL.txt
-	ECHO 			*_NAVAID ISR.txt
-	ECHO 			*_AIRPORT ISR.txt
-	ECHO 			*_AIRWAY FIXES ALIAS.txt
-	ECHO 			*_STAR DP FIXES ALIAS.txt
-	ECHO 			*_AIRPORT_SPECIFIC_ISR.txt
-	ECHO 			*_TELEPHONY.txt
+	ECHO 			000_EVERYTHING ELSE.txt
+	ECHO 			010_FAA CHART RECALL.txt
+	ECHO 			020_NAVAID ISR.txt
+	ECHO 			030_AIRPORT ISR.txt
+	ECHO 			040_AIRWAY FIXES ALIAS.txt
+	ECHO 			050_STAR DP FIXES ALIAS.txt
+	ECHO 			060_AIRPORT_SPECIFIC_ISR.txt
+	ECHO 			070_TELEPHONY.txt
 	ECHO.	
 	ECHO 		Note how they have a prefixing number and ends with an underscore; This is required formatting.
 	ECHO 		The prefixing number can be as small or large as you like but the name of the file after the
@@ -850,14 +850,9 @@ EXIT
 	
 	SET RESET_QUERY=NO_INPUT_BY_USER
 	
-	SET /P HELP_QUERY=Type associated letter option or type DETAILS, and press Enter: 
+	SET /P HELP_QUERY=Type associated letter option and press Enter: 
 		if /i "!HELP_QUERY!"=="A" GOTO HelpResetPrefs
 		if /i "!HELP_QUERY!"=="B" GOTO HelpEditGeoJSONprefs
-		ECHO.
-		ECHO  *** !HELP_QUERY! *** is NOT a recognized response. Try again...
-		echo.
-		ECHO Press any key to try again...
-		PAUSE>NUL
 		goto HELP
 
 :HelpResetPrefs
